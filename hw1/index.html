@@ -1,7 +1,211 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Homework 1 index.html here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184/284A Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184/284A: Computer Graphics and Imaging, Spring 2024</h1>
+<h1 align="middle">Homework 1: Rasterizer</h1>
+<h2 align="middle">Jeffrey Huang and Brian Quach</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>
+  In this homework, we learned different ways to rasterize and sample images. Starting from rasterizing triangles to the three main methods for antialiasing: supersampling, pixel sampling, and level sampling. With each of these methods, we learned the mathematical processes that go behind these algorithms and how to approach them. They each help to enhance an image, having their tradeoffs between speed, memory usage, and antialiasing power.
+  <br>
+</br>
+  One thing we noticed is that supersampling was the most impactful in terms of creating a smoother image. This is because the high frequency parts of the image that originally produced “jaggies” were blurred as we increased the sample rate. When combined with other methods, the difference in image quality was jarring. Overall this homework really taught us the intricacies of what goes on behind the scenes when messing around with in-game video settings in the games that we play.
+
+</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+
+<div align="middle">
+  <p>We essentially used the formula (Three Line Test) taken from Lecture 2 in class and converted it into a function that checks if a given point is inside the triangle. This is done by checking if a point is above a line from point a to point b for all 3 sides of the triangle. From here, we looped through all the points in the bounding box of the triangle and checked if the sampled point was inside. If it was, we rasterized the point.
+  </p>
+  <p>
+    Because we took the min and max of the given x and y points, we effectively found the bounding box of the triangle. This means that our algorithm checks each sample within the bounding box and not simply every pixel in the framebuffer.
+  </p>
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task1.png" align="middle" width="400px"/>
+        <figcaption align="middle"> basic/test4.svg with pixel inspector </figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+
+<div align="middle">
+  <p>
+    In a high level overview, our supersampling algorithm is similar to the algorithm in Task 1, but in our rasterization process, we added additional for-loops to break down each pixel into smaller samples (based on the the sample_rate). With each of the smaller samples, we put it into a helper function that we created to check whether its within our triangle or not. 
+    If it is, we scale the points to what they would be respective of our sample_buffer size, and fill in the pixel there. Our sample_buffer is resized when sample rate changes, increasing if (multiplying it by) sqrt(sample_rate). When the rasterization is completed, resolve_to_framebuffer goes through the sample_buffer and grabs all the Colors within a sqrt(sample_rate) x sqrt(sample_rate), averages it out, and scales down into the proper frame_buffer. 
+    This process of supersampling creates more accurate Colors for each points, creating more transparent corners or sides which help blur jaggies and therefore antialias our triangles.
+  </p>
+
+  <p>
+    Comparing the screenshots for sample rates of 1, 4, and 16, we can see that the lower sample rate leaves so many jagged edges. This is because when we resolve to framebuffer, we are not accounting for any averages in color. As we increase the sample rate, we can see that there are more data points to account for in the calculation of the color average, which results in a more “blurred” effect. 
+  </p>
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task2_rate1.png" align="middle" width="400px"/>
+        <figcaption align="middle">basic/test4.svg sample rate 1</figcaption>
+      </td>
+      <td>
+        <img src="images/task2_rate4.png" align="middle" width="400px"/>
+        <figcaption align="middle">basic/test4.svg sample rate 4</figcaption>
+      </td>
+      
+    </tr>
+    <br>
+    <td>
+      <img src="images/task2_rate16.png" align="middle" width="400px"/>
+      <figcaption align="middle">basic/test4.svg sample rate 16</figcaption>
+    </td>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 3: Transforms</h3>
+
+<div align="middle">
+  <p>We were trying to get the cubeman to “serve” 💁🏻‍♂️💁🏻‍♀️. This is a pose where the person pops out their hips, puts one hand on their waist, and "serves" - posing as if they are “serving” in a restaurant. **We added an extra block for the hand to show more of the “serveeeee.”
+  </p>
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task3_serve.png" align="middle" width="400px"/>
+        <figcaption align="middle"> cubeman "serving" </figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+
+<div align="middle">
+  <p> Barycentric coordinates is a coordinate system for triangles. You can give a point P inside a triangle in terms of the vertices A, B, and C. You can think of a point P as being weighed or pulled towards each vertex by a certain proportion. These proportions are known as alpha, beta, and gamma and they all add up to 1. Alpha is how much point P is being “pulled” by the vertex A, Beta is how much point P is being “pulled” by the vertex B, and so on. Because they are proportions, you can then multiply alpha, beta, and gamma by something like colors to easily map colors across the triangle. If you take a look at this example, you can see that Va, Vb, and Vc are vertices that start with the colors red, blue, and green. As you move further from the Va, it will start to fade into the other colors.  
+  </p>
+  
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task4.png" align="middle" width="400px"/>
+        <figcaption align="middle"> basic/test4.svg with pixel inspector </figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+
+<div align="middle">
+  <p>
+    Pixel sampling is the process of getting a sampled value, or color, from a texture that is then used when rendering that point in the image. We essentially used barycentric coordinates to find the texture coordinate values at a given x, y. And then we can either use nearest neighbor sampling or bilinear sampling. Nearest neighbor just takes the value of the nearest texel or texture element, whereas bilinear takes the nearest 4 and then gives you the average of the values using linear interpolation.
+  </p>
+
+  <p>Nearest pixel sampling produces many artifacts whereas bilinear sampling removes many of those artifacts. As we increase the sample rate, we can see that bilinear sampling makes a drastic change in how smooth the images appear. This change often takes place when there is a drastic change in color or when there are high frequencies. This is because bilinear sampling takes the average of the nearest 4 texture coordinates which allows for producing a smooth “middle ground” color for points near a high frequency edge.</p>
+
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task5_nearest1.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/test6.svg nearest pixel sampling, <br> sample rate 1</figcaption>
+      </td>
+      <td>
+        <img src="images/task5_nearest16.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/test6.svg nearest pixel sampling, <br> sample rate 16</figcaption>
+      </td>
+      
+    </tr>
+    <br>
+      <td>
+        <img src="images/task5_bilinear1.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/test6.svg bilinear pixel sampling,<br> sample rate 1</figcaption>
+      </td>
+      <td>
+        <img src="images/task5_bilinear16.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/test6.svg bilinear pixel sampling, <br>sample rate 16</figcaption>
+      </td>
+  </table>
+
+</div>
+
+
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+
+<div align="middle">
+  <p>
+    Level sampling takes advantage of the idea of mipmaps. The idea is to have mipmaps of different levels or different resolutions of an image pre-rendered and selecting different levels of qualities (mipmaps) to apply for each pixel depending on relative distance. To calculate the different levels, for each (x,y), (x+1,y), and (x,y+1), we calculated their barycentric coordinates and gathered their alpha, beta, and gamma values. With those, we were able to find their respective texture coordinates (in the uv plane), which we can use to find the difference vectors in get_level. Whichever difference vector is larger will have a greater effect on the mipmap selection, which is why we take the max when calculating the mipmap level. For the different lsm, L_ZERO used level of 0, L_NEAREST used what get_level returned, and L_LINEAR used the level get_level returns and one level above it, weighing both levels by ½ in the final calculation. 
+  </p>
+
+  <p>
+    The three different sampling techniques can be very beneficial in certain use cases but very costly in others. In terms of speed and memory, supersampling is arguably the slowest and requires the most memory because it involves sampling multiple times per pixel, and storing these samples can be very costly. However, it does produce quite noticeable antialiasing results, resulting in very smooth images, especially in high frequency areas. Pixel sampling is arguably the fastest because it involves sampling very little amounts of pixels. Not much computation is required yet it produces some fair results for antialiasing. In terms of memory, pixel sampling is not too costly because it doesn’t involve storing additional samples or mipmaps. Level sampling can be costly, especially when we get to trilinear sampling. However, because we make use of mipmaps, level sampling provides great antialiasing results, reducing the amount of aliasing artifacts. Unfortunately, because we store multiple levels of mipmaps, it is fairly costly for storage.
+  </p>
+
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task6_zero_nearest.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/flower.svg L_ZERO and P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/task6_zero_linear.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/flower.svg L_ZERO and P_LINEAR</figcaption>
+      </td>
+      
+    </tr>
+    <br>
+      <td>
+        <img src="images/task6_near_nearest.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/flower.svg L_NEAREST and P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/task6_near_linear.png" align="middle" width="400px"/>
+        <figcaption align="middle">texmap/flower.svg L_NEAREST and P_LINEAR</figcaption>
+      </td>
+  </table>
+
+</div>
+
+<h2 align="middle">Section III: Art Competition</h2>
+<p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Draw something interesting!</h3>
+
+</body>
 </html>
