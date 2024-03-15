@@ -39,7 +39,7 @@
 
 <body>
 
-<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2024</h1>
 <h1 align="middle">Project 3-1: Path Tracer</h1>
 <h2 align="middle">Jeffrey Huang and Brian Quach</h2>
 
@@ -50,7 +50,7 @@
 
 <h2 align="middle">Overview</h2>
 <p>
-    YOUR RESPONSE GOES HERE
+  In this project, we implemented ray generation and tracing to render a variety of scenes with different objects and light sources. We developed intersection algorithms to check if a ray intersected with a primitive using Moller Trumbore to our advantage. From here, we constructed the bounding volume hierarchy, where we split the scene into different nodes that would contain a certain number of primitives. Our splitting algorithm involved splitting at the median on the longest axis. We also implemented BVH acceleration, which allowed us to speed up the intersection checking process in logarithmic time by checking to see if we intersected with a bounding box or not and if the node was a leaf we would check to see if there was a hit with any primitive. We then implemented direct and indirect lighting, tracing light rays with zero bounce, one bounce, and N bounces. These took into account different settings that we could tweak in the command line such as number of samples, max ray depth, and number of light rays. In the end, we finally introduced adaptive sampling, which allowed us to efficiently focus our sampling in areas that were considered harder. Overall, we learned quite a bit about ray tracing and its intricacies. This project was worth it!
 </p>
 <br>
 
