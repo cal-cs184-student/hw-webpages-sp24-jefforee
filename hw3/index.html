@@ -503,7 +503,7 @@ Pick one scene and render it with at least 2048 samples per pixel. Show a good s
   Explain adaptive sampling. Walk through your implementation of the adaptive sampling.
 </h3>
 <p>
-  For adapting sampling, we used the equations provided in the specs. To integrate it into our function, we initialize s1 and s2 outside our for loop for samples. We conduct a convergence check every samplePerBatch, calculating the mean, variance, and standard deviation to calculate I. If our I is less than the maxTolerance * sqrt(num_samples so far), we have converged and break the sampling loop. After we conduct the check for convergence at each sample, if it hasn’t converged yet, we calculate the illuminance (x) using the ray generated. We then add x to s1 and x^2 to s2 to be used to calculate mean, variance, and standard deviation in the convergence checker. 
+  Adapting sampling allows us to reduce the number of samples for pixels that converge quickly. To implement the adapting sampling equation, we used the equations provided in the specs. To integrate it into our function, we initialize s1 and s2 outside our for loop for samples. We conduct a convergence check every samplePerBatch, calculating the mean, variance, and standard deviation to calculate I. If our I is less than the maxTolerance * sqrt(num_samples so far), we have converged and break the sampling loop. After we conduct the check for convergence at each sample, if it hasn’t converged yet, we calculate the illuminance (x) using the ray generated. We then add x to s1 and x^2 to s2 to be used to calculate mean, variance, and standard deviation in the convergence checker. 
 </p>
 <br>
 
